@@ -5,11 +5,12 @@ import os
 
 app = FastAPI()
 
-# Load CSV mapping
+# Load CSV mapping (UserID → FileID)
 CSV_PATH = os.path.join(os.path.dirname(__file__), "file_map.csv")
 df = pd.read_csv(CSV_PATH)
-file_map = dict(zip(df["userid"], df["fileid"]))
+file_map = {str(k).strip().lower(): str(v).strip() for k, v in zip(df["userid"], df["fileid"])}
 
+# HTML template for the login page
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
@@ -41,8 +42,12 @@ async def home():
 @app.post("/download")
 async def download(userid: str = Form(...)):
     userid = userid.strip().lower()
-    if userid in file_map:
-        fileid = file_map[userid]
+    fileid = file_map.get(userid)
+    if fileid:
+        # Redirect to Google Drive direct download link
         url = f"https://drive.google.com/uc?export=download&id={fileid}"
         return RedirectResponse(url)
-    return HTMLResponse("<h3 style='color:red;'>❌ User ID not found. Please try again.</h3>", status_code=404)
+    return HTMLResponse(
+        "<h3 style='color:red;'>❌ User ID not found or file inaccessible.</h3>", 
+        status_code=404
+    )
