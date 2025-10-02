@@ -2,33 +2,42 @@ from fastapi import FastAPI, Form
 from fastapi.responses import HTMLResponse
 import pandas as pd
 import os
+import json
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 
 # -------------------- CONFIG --------------------
-SERVICE_ACCOUNT_FILE = "service_account.json"  # upload to GitHub or Koyeb
-FOLDER_ID = os.getenv("DRIVE_FOLDER_ID")       # set this env variable in Koyeb
-CSV_PATH = "/data/file_map.csv"            # Koyeb volume path
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
+CSV_PATH = "/app/data/file_map.csv"  # Koyeb volume path
+
+# Load environment variables
+FOLDER_ID = os.getenv("DRIVE_FOLDER_ID")  # Google Drive folder ID
+SERVICE_ACCOUNT_JSON = os.getenv("SERVICE_ACCOUNT_JSON")  # JSON content as env var
 
 # -------------------- INIT --------------------
 app = FastAPI()
 
 def generate_csv_from_drive():
-    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    """Fetch files from Google Drive folder and generate CSV"""
+    service_account_info = json.loads(SERVICE_ACCOUNT_JSON)
+    creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
     service = build("drive", "v3", credentials=creds)
+
     results = service.files().list(
         q=f"'{FOLDER_ID}' in parents and trashed=false",
         pageSize=1000,
         fields="files(id, name)"
     ).execute()
     items = results.get("files", [])
+
     data = []
     for f in items:
         userid = os.path.splitext(f['name'])[0].strip().lower()  # filename without extension
         fileid = f['id']
         data.append({"userid": userid, "fileid": fileid})
+
     df = pd.DataFrame(data)
+    os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
     df.to_csv(CSV_PATH, index=False)
     print(f"CSV updated with {len(items)} files.")
 
@@ -91,7 +100,7 @@ def page_template(title, message, button_text=None, button_link=None, success=Tr
         p {{font-size:16px;}}
         a button {{padding:14px; border:none; border-radius:8px; background-color:{color}; color:white; font-size:16px; cursor:pointer; margin-top:20px;}}
         a button:hover {{background-color:{color if success else '#d32f2f'};}}
-        @media (max-width:480px) {{.card {padding:20px;} h2 {font-size:20px;} p, a button {{font-size:14px; padding:12px;}}}}
+        @media (max-width:480px) {{.card {{padding:20px;}} h2 {{font-size:20px;}} p, a button {{font-size:14px; padding:12px;}}}}
     </style>
     </head>
     <body>
