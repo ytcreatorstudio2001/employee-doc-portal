@@ -10,7 +10,7 @@ CSV_PATH = os.path.join(os.path.dirname(__file__), "file_map.csv")
 df = pd.read_csv(CSV_PATH)
 file_map = {str(k).strip().lower(): str(v).strip() for k, v in zip(df["userid"], df["fileid"])}
 
-# Home page HTML
+# Home page HTML without logo
 HOME_PAGE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -39,7 +39,6 @@ HOME_PAGE = """
         transition: transform 0.3s;
     }
     .card:hover { transform: translateY(-5px); }
-    .card img { width: 80px; margin-bottom: 20px; }
     .card h2 { margin-bottom: 25px; color: #333; font-size: 24px; }
     input[type=text] {
         width: 100%;
@@ -76,7 +75,6 @@ HOME_PAGE = """
 </head>
 <body>
 <div class="card">
-    <img src="https://via.placeholder.com/80" alt="Company Logo" />
     <h2>Employee Document Download</h2>
     <form action="/download" method="post">
         <input type="text" name="userid" placeholder="Enter your User ID" required />
