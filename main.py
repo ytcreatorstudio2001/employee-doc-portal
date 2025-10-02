@@ -11,7 +11,7 @@ df = pd.read_csv(CSV_PATH)
 file_map = {str(k).strip().lower(): str(v).strip() for k, v in zip(df["userid"], df["fileid"])}
 
 # Home page HTML
-HTML_TEMPLATE = """
+HOME_PAGE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,17 +36,9 @@ HTML_TEMPLATE = """
         text-align: center;
         transition: transform 0.3s;
     }
-    .card:hover {
-        transform: translateY(-5px);
-    }
-    .card img {
-        width: 80px;
-        margin-bottom: 20px;
-    }
-    .card h2 {
-        margin-bottom: 25px;
-        color: #333;
-    }
+    .card:hover { transform: translateY(-5px); }
+    .card img { width: 80px; margin-bottom: 20px; }
+    .card h2 { margin-bottom: 25px; color: #333; }
     input[type=text] {
         width: 100%;
         padding: 12px;
@@ -66,22 +58,7 @@ HTML_TEMPLATE = """
         cursor: pointer;
         transition: background 0.3s;
     }
-    button:hover {
-        background-color: #45a049;
-    }
-    .download-link {
-        margin-top: 20px;
-        display: inline-block;
-        background-color: #2196F3;
-        color: white;
-        padding: 12px 20px;
-        text-decoration: none;
-        border-radius: 8px;
-        transition: background 0.3s;
-    }
-    .download-link:hover {
-        background-color: #1976D2;
-    }
+    button:hover { background-color: #45a049; }
 </style>
 </head>
 <body>
@@ -97,9 +74,64 @@ HTML_TEMPLATE = """
 </html>
 """
 
+# Generic page template for download & error pages
+def page_template(title, message, button_text=None, button_link=None, success=True):
+    color = "#4CAF50" if success else "#f44336"
+    button_html = ""
+    if button_text and button_link:
+        button_html = f'<a href="{button_link}" style="margin-top:20px; text-decoration:none;"><button>{button_text}</button></a>'
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <title>{title}</title>
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+            margin:0;
+        }}
+        .card {{
+            background-color:#fff;
+            padding:40px;
+            border-radius:15px;
+            box-shadow:0 10px 25px rgba(0,0,0,0.2);
+            width:400px;
+            text-align:center;
+        }}
+        h2 {{ color:{color}; margin-bottom:25px; }}
+        a button {{
+            padding:12px 20px;
+            border:none;
+            border-radius:8px;
+            background-color:{color};
+            color:white;
+            font-size:16px;
+            cursor:pointer;
+            transition:background 0.3s;
+        }}
+        a button:hover {{ background-color:{color if success else '#d32f2f'}; }}
+        a {{ text-decoration:none; }}
+    </style>
+    </head>
+    <body>
+        <div class="card">
+            <h2>{title}</h2>
+            <p>{message}</p>
+            {button_html}
+        </div>
+    </body>
+    </html>
+    """
+
 @app.get("/", response_class=HTMLResponse)
 async def home():
-    return HTML_TEMPLATE
+    return HOME_PAGE
 
 @app.post("/download")
 async def download(userid: str = Form(...)):
@@ -107,10 +139,18 @@ async def download(userid: str = Form(...)):
     fileid = file_map.get(userid)
     if fileid:
         url = f"https://drive.google.com/uc?export=download&id={fileid}"
-        return HTMLResponse(f"""
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh;">
-            <h2 style="color:green;">✅ File ready for download</h2>
-            <a class="download-link" href="{url}" target="_blank">Click here to download your document</a>
-        </div>
-        """)
-    return HTMLResponse("<h3 style='color:red; text-align:center; margin-top:50px;'>❌ User ID not found or file inaccessible.</h3>", status_code=404)
+        return HTMLResponse(page_template(
+            title="✅ File Ready for Download",
+            message=f'<a href="{url}" target="_blank" style="color:#2196F3;">Click here to download your document</a>',
+            button_text="Go Back",
+            button_link="/",
+            success=True
+        ))
+    else:
+        return HTMLResponse(page_template(
+            title="❌ Invalid User ID",
+            message="The User ID you entered was not found. Please check and try again.",
+            button_text="Go Back",
+            button_link="/",
+            success=False
+        ))
