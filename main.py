@@ -8,7 +8,7 @@ from google.oauth2.service_account import Credentials
 # -------------------- CONFIG --------------------
 SERVICE_ACCOUNT_FILE = "service_account.json"  # upload to GitHub or Koyeb
 FOLDER_ID = os.getenv("DRIVE_FOLDER_ID")       # set this env variable in Koyeb
-CSV_PATH = "/app/data/file_map.csv"            # Koyeb volume path
+CSV_PATH = "/data/file_map.csv"            # Koyeb volume path
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 
 # -------------------- INIT --------------------
