@@ -8,6 +8,7 @@ app = FastAPI()
 # Load CSV mapping (UserID → FileID)
 CSV_PATH = os.path.join(os.path.dirname(__file__), "file_map.csv")
 df = pd.read_csv(CSV_PATH)
+# Strip spaces and lowercase keys
 file_map = {str(k).strip().lower(): str(v).strip() for k, v in zip(df["userid"], df["fileid"])}
 
 # HTML template for the login page
@@ -44,7 +45,8 @@ async def download(userid: str = Form(...)):
     userid = userid.strip().lower()
     fileid = file_map.get(userid)
     if fileid:
-        # Redirect to Google Drive direct download link
+        # Ensure no spaces in file ID
+        fileid = fileid.strip()
         url = f"https://drive.google.com/uc?export=download&id={fileid}"
         return RedirectResponse(url)
     return HTMLResponse(
