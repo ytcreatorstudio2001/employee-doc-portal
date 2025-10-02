@@ -1,1 +1,48 @@
+from fastapi import FastAPI, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
+import pandas as pd
+import os
 
+app = FastAPI()
+
+# Load CSV mapping
+CSV_PATH = os.path.join(os.path.dirname(__file__), "file_map.csv")
+df = pd.read_csv(CSV_PATH)
+file_map = dict(zip(df["userid"], df["fileid"]))
+
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Document Portal</title>
+    <style>
+        body { font-family: Arial, sans-serif; display:flex; align-items:center; justify-content:center; height:100vh; }
+        .card { padding:20px; box-shadow:0 4px 14px rgba(0,0,0,0.1); border-radius:10px; text-align:center; }
+        input[type=text] { width:100%; padding:10px; margin:10px 0; }
+        button { padding:10px 20px; cursor:pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Employee Document Download</h2>
+        <form action="/download" method="post">
+            <input type="text" name="userid" placeholder="Enter your User ID" required />
+            <button type="submit">Download</button>
+        </form>
+    </div>
+</body>
+</html>
+"""
+
+@app.get("/", response_class=HTMLResponse)
+async def home():
+    return HTML_TEMPLATE
+
+@app.post("/download")
+async def download(userid: str = Form(...)):
+    userid = userid.strip().lower()
+    if userid in file_map:
+        fileid = file_map[userid]
+        url = f"https://drive.google.com/uc?export=download&id={fileid}"
+        return RedirectResponse(url)
+    return HTMLResponse("<h3 style='color:red;'>❌ User ID not found. Please try again.</h3>", status_code=404)
