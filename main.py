@@ -16,6 +16,7 @@ HOME_PAGE = """
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Employee Document Portal</title>
 <style>
     body {
@@ -29,16 +30,17 @@ HOME_PAGE = """
     }
     .card {
         background-color: #fff;
-        padding: 40px;
+        padding: 30px;
         border-radius: 15px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        width: 350px;
+        width: 90%;
+        max-width: 400px;
         text-align: center;
         transition: transform 0.3s;
     }
     .card:hover { transform: translateY(-5px); }
     .card img { width: 80px; margin-bottom: 20px; }
-    .card h2 { margin-bottom: 25px; color: #333; }
+    .card h2 { margin-bottom: 25px; color: #333; font-size: 24px; }
     input[type=text] {
         width: 100%;
         padding: 12px;
@@ -46,10 +48,11 @@ HOME_PAGE = """
         border: 1px solid #ccc;
         margin-bottom: 20px;
         font-size: 16px;
+        box-sizing: border-box;
     }
     button {
         width: 100%;
-        padding: 12px;
+        padding: 14px;
         border: none;
         border-radius: 8px;
         background-color: #4CAF50;
@@ -59,6 +62,16 @@ HOME_PAGE = """
         transition: background 0.3s;
     }
     button:hover { background-color: #45a049; }
+    a button {
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+    }
+    @media (max-width: 480px) {
+        .card { padding: 20px; }
+        h2 { font-size: 20px; }
+        input[type=text], button, a button { font-size: 14px; padding: 12px; }
+    }
 </style>
 </head>
 <body>
@@ -79,12 +92,13 @@ def page_template(title, message, button_text=None, button_link=None, success=Tr
     color = "#4CAF50" if success else "#f44336"
     button_html = ""
     if button_text and button_link:
-        button_html = f'<a href="{button_link}" style="margin-top:20px; text-decoration:none;"><button>{button_text}</button></a>'
+        button_html = f'<a href="{button_link}"><button>{button_text}</button></a>'
     return f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title}</title>
     <style>
         body {{
@@ -98,25 +112,31 @@ def page_template(title, message, button_text=None, button_link=None, success=Tr
         }}
         .card {{
             background-color:#fff;
-            padding:40px;
+            padding:30px;
             border-radius:15px;
             box-shadow:0 10px 25px rgba(0,0,0,0.2);
-            width:400px;
+            width:90%;
+            max-width:400px;
             text-align:center;
         }}
-        h2 {{ color:{color}; margin-bottom:25px; }}
+        h2 {{ color:{color}; margin-bottom:25px; font-size:24px; }}
+        p {{ font-size:16px; }}
         a button {{
-            padding:12px 20px;
+            padding:14px;
             border:none;
             border-radius:8px;
             background-color:{color};
             color:white;
             font-size:16px;
             cursor:pointer;
-            transition:background 0.3s;
+            margin-top:20px;
         }}
         a button:hover {{ background-color:{color if success else '#d32f2f'}; }}
-        a {{ text-decoration:none; }}
+        @media (max-width: 480px) {{
+            .card {{ padding:20px; }}
+            h2 {{ font-size:20px; }}
+            p, a button {{ font-size:14px; padding:12px; }}
+        }}
     </style>
     </head>
     <body>
